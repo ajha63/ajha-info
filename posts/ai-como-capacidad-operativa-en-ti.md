@@ -22,7 +22,7 @@ tags:
 reading_time: "5 min"
 level: "Ejecutivo avanzado"
 status: "borrador"
-canonical_url: ""
+canonical_url: "posts/ai-como-capacidad-operativa-en-ti.html"
 ---
 
 # AI como capacidad operativa en TI: lo que un CEO si deberia medir
