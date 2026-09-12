@@ -1,0 +1,107 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Temporary GitHub Actions roles for ajha.info release planning and deployment
+
+Resources:
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+      Tags:
+        - Key: Project
+          Value: ajha.info
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  GitHubReadRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AjhaInfoGitHubRead
+      Description: Read-only S3 access for the ajha.info deployment plan
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProvider
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: repo:ajha63@560156/ajha-info@1367452827:ref:refs/heads/main
+      Policies:
+        - PolicyName: AjhaInfoReleaseRead
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadBucket
+                Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                Resource: arn:aws:s3:::ajha.info
+              - Sid: ReadObjects
+                Effect: Allow
+                Action: s3:GetObject
+                Resource: arn:aws:s3:::ajha.info/*
+      Tags:
+        - Key: Project
+          Value: ajha.info
+        - Key: ManagedBy
+          Value: CloudFormation
+
+  GitHubDeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AjhaInfoGitHubDeploy
+      Description: Approved S3 and CloudFront publication for ajha.info
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProvider
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: repo:ajha63@560156/ajha-info@1367452827:environment:production
+      Policies:
+        - PolicyName: AjhaInfoReleaseDeploy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Sid: ReadBucket
+                Effect: Allow
+                Action:
+                  - s3:GetBucketLocation
+                  - s3:ListBucket
+                Resource: arn:aws:s3:::ajha.info
+              - Sid: ReadAndPublishObjects
+                Effect: Allow
+                Action:
+                  - s3:GetObject
+                  - s3:PutObject
+                Resource: arn:aws:s3:::ajha.info/*
+              - Sid: InvalidateDistribution
+                Effect: Allow
+                Action:
+                  - cloudfront:CreateInvalidation
+                  - cloudfront:GetInvalidation
+                Resource: arn:aws:cloudfront::554982632606:distribution/E2EWY8K28XHSNA
+      Tags:
+        - Key: Project
+          Value: ajha.info
+        - Key: ManagedBy
+          Value: CloudFormation
+
+Outputs:
+  ReadRoleArn:
+    Description: Configure this ARN as the repository variable AWS_READ_ROLE_ARN
+    Value: !GetAtt GitHubReadRole.Arn
+  DeployRoleArn:
+    Description: Configure this ARN as the repository variable AWS_DEPLOY_ROLE_ARN
+    Value: !GetAtt GitHubDeployRole.Arn

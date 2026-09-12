@@ -15,16 +15,18 @@ Este flujo publica el contenido estatico aprobado en `arn:aws:s3:::ajha.info` y 
 
 ## Configuracion unica requerida
 
-1. Crear o identificar dos roles IAM temporales para GitHub OIDC:
+1. Revisar y desplegar `infra/github-actions-oidc.yml` con una sesion administrativa temporal. La plantilla crea el proveedor OIDC y dos roles:
    - Rol de plan: `s3:ListBucket`, `s3:GetBucketLocation` sobre el bucket y `s3:GetObject` sobre sus objetos.
    - Rol de despliegue: los permisos anteriores, `s3:PutObject`, `cloudfront:CreateInvalidation` y `cloudfront:GetInvalidation`. Agregar `s3:DeleteObject` solo cuando se aprueben bajas administradas por el pipeline.
-2. Restringir las politicas de confianza al proveedor `token.actions.githubusercontent.com`, audience `sts.amazonaws.com` y subjects exactos de este repositorio:
-   - Plan: ejecución desde `refs/heads/main`.
-   - Despliegue: environment `production`.
-   Verificar el formato actual del claim `sub`, incluidos claims inmutables si la organizacion los habilito. No usar comodines que permitan otros repositorios.
+2. Las politicas de confianza usan audience `sts.amazonaws.com` y los subjects inmutables confirmados por GitHub:
+   - Plan: `repo:ajha63@560156/ajha-info@1367452827:ref:refs/heads/main`.
+   - Despliegue: `repo:ajha63@560156/ajha-info@1367452827:environment:production`.
+   Volver a consultar la configuracion OIDC del repositorio si cambia su owner, nombre o identidad inmutable. No usar comodines que permitan otros repositorios.
 3. Crear las variables de Actions `AWS_READ_ROLE_ARN` y `AWS_DEPLOY_ROLE_ARN` con los ARN de esos roles. No guardar access keys en GitHub Secrets.
 4. Configurar el environment `production` exclusivamente con `ajha63` como required reviewer y limitar despliegues a `main`. Activar `prevent self-review` cuando otra persona o una identidad de automatizacion inicie el workflow; si `ajha63` es tambien quien lo inicia, esa opcion impediria que el owner apruebe. El workflow comprueba el reviewer esperado antes de solicitar la sesion AWS de escritura.
 5. Renovar GitHub CLI localmente con `gh auth login -h github.com` sin compartir el token.
+
+La politica inicial no incluye `s3:DeleteObject`; el primer despliegue no contiene bajas. Agregar ese permiso mediante revision de infraestructura solo cuando exista una baja explicita de un objeto marcado como administrado por el pipeline.
 
 ## Preparacion y pull request
 
