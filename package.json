@@ -1,0 +1,10 @@
+{
+  "name": "ajha-info",
+  "private": true,
+  "scripts": {
+    "validate:html": "html-validate 'index.html' 'posts/**/*.html'"
+  },
+  "devDependencies": {
+    "html-validate": "11.15.0"
+  }
+}
