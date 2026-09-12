@@ -1,0 +1,150 @@
+name: Deploy ajha.info
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_sha:
+        description: Full commit SHA from the protected main branch
+        required: true
+        type: string
+      delete_paths_json:
+        description: Explicit managed S3 keys to delete as a JSON array
+        required: true
+        default: "[]"
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ajha-info-production
+  cancel-in-progress: false
+
+jobs:
+  plan:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      artifact_sha256: ${{ steps.plan.outputs.artifact_sha256 }}
+      plan_sha256: ${{ steps.plan.outputs.plan_sha256 }}
+    steps:
+      - name: Check out approved source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.release_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify exact release SHA
+        env:
+          EXPECTED_RELEASE_SHA: ${{ inputs.release_sha }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_RELEASE_SHA"
+          git merge-base --is-ancestor "$EXPECTED_RELEASE_SHA" origin/main
+
+      - name: Install validation dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Run release checks
+        env:
+          RELEASE_DIR: ${{ runner.temp }}/ajha-release
+        run: |
+          python3 -m unittest discover -s tests
+          npm run validate:html
+          python3 scripts/build_site.py --output "$RELEASE_DIR"
+
+      - name: Acquire read-only AWS session
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
+        with:
+          role-to-assume: ${{ vars.AWS_READ_ROLE_ARN }}
+          aws-region: us-east-1
+          allowed-account-ids: "554982632606"
+          role-session-name: ajha-info-plan
+
+      - name: Calculate production plan
+        id: plan
+        env:
+          DELETE_PATHS_JSON: ${{ inputs.delete_paths_json }}
+          RELEASE_DIR: ${{ runner.temp }}/ajha-release
+        run: |
+          python3 scripts/deploy_site.py plan \
+            --release-dir "$RELEASE_DIR" \
+            --bucket ajha.info \
+            --delete-paths-json "$DELETE_PATHS_JSON" \
+            --output "$RELEASE_DIR/plan.json" \
+            --github-output "$GITHUB_OUTPUT" \
+            --github-summary "$GITHUB_STEP_SUMMARY"
+
+      - name: Retain the reviewed artifact and plan
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: ajha-info-release-${{ github.run_id }}
+          path: ${{ runner.temp }}/ajha-release/
+          if-no-files-found: error
+          retention-days: 7
+
+  deploy:
+    needs: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    permissions:
+      contents: read
+      deployments: read
+      id-token: write
+    steps:
+      - name: Check out deployment tooling
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          ref: ${{ inputs.release_sha }}
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Verify enforced owner approval
+        env:
+          EXPECTED_PRODUCTION_REVIEWER: ajha63
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 scripts/check_production_environment.py
+
+      - name: Download reviewed artifact and plan
+        uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
+        with:
+          name: ajha-info-release-${{ github.run_id }}
+          path: ${{ runner.temp }}/ajha-release
+
+      - name: Verify approved digests
+        env:
+          APPROVED_ARTIFACT_SHA256: ${{ needs.plan.outputs.artifact_sha256 }}
+          APPROVED_PLAN_SHA256: ${{ needs.plan.outputs.plan_sha256 }}
+          RELEASE_DIR: ${{ runner.temp }}/ajha-release
+        run: |
+          python3 -c 'import json, os, pathlib; release = pathlib.Path(os.environ["RELEASE_DIR"]); manifest = json.loads((release / "manifest.json").read_text()); plan = json.loads((release / "plan.json").read_text()); assert manifest["artifact_sha256"] == os.environ["APPROVED_ARTIFACT_SHA256"]; assert plan["plan_sha256"] == os.environ["APPROVED_PLAN_SHA256"]'
+
+      - name: Acquire approved deployment session
+        uses: aws-actions/configure-aws-credentials@00943011d9042930efac3dcd3a170e4273319bc8 # v5.1.0
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: us-east-1
+          allowed-account-ids: "554982632606"
+          role-session-name: ajha-info-deploy
+
+      - name: Apply unchanged plan and invalidate CloudFront
+        env:
+          RELEASE_DIR: ${{ runner.temp }}/ajha-release
+        run: |
+          python3 scripts/deploy_site.py apply \
+            --release-dir "$RELEASE_DIR" \
+            --plan "$RELEASE_DIR/plan.json" \
+            --distribution-id E2EWY8K28XHSNA
+
+      - name: Verify published object hashes
+        env:
+          RELEASE_DIR: ${{ runner.temp }}/ajha-release
+        run: |
+          python3 scripts/deploy_site.py verify \
+            --release-dir "$RELEASE_DIR" \
+            --plan "$RELEASE_DIR/plan.json" \
+            --base-url https://ajha.info
