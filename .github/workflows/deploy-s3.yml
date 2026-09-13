@@ -13,20 +13,20 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v6
+  steps:
+  - name: Checkout repository
+    uses: actions/checkout@v6
 
-      - name: Configure AWS credentials
-      - uses: aws-actions/configure-aws-credentials@v4
-          with:
-            role-to-assume: arn:aws:iam::<AWS_ACCOUNT_ID>:role/<ROLE_NAME>
-            aws-region: us-east-1
+  - name: Configure AWS credentials
+    uses: aws-actions/configure-aws-credentials@v4
+    with:
+      role-to-assume: arn:aws:iam::554982632606:role/<ROLE_NAME>
+      aws-region: us-east-1
 
-      - name: Deploy to S3
-        run: |
-          aws s3 sync . s3://ajha.me \
-            --delete \
-            --exclude ".git/*" \
-            --exclude ".github/*" \
-            --exclude "README.md"
+  - name: Deploy to S3
+    run: |
+      aws s3 sync . s3://ajha.me \
+        --delete \
+        --exclude ".git/*" \
+        --exclude ".github/*" \
+        --exclude "README.md"
