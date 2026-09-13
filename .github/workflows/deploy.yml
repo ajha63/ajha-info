@@ -32,7 +32,7 @@ jobs:
       plan_sha256: ${{ steps.plan.outputs.plan_sha256 }}
     steps:
       - name: Check out approved source
-        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        uses: actions/checkout@v6
         with:
           ref: ${{ inputs.release_sha }}
           fetch-depth: 0
