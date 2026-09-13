@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Plan, apply, and verify an approved ajha.info S3 release."""
+"""Plan, apply, and verify an approved ajha.me S3 release."""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ import urllib.parse
 import urllib.request
 
 
-MANAGED_BY = "ajha-info-deploy"
+MANAGED_BY = "ajha-me-deploy"
 
 
 def aws(args: list[str], profile: str | None = None) -> object:
@@ -168,7 +168,7 @@ def write_summary(plan: dict[str, object], summary_path: Path | None) -> None:
     if not summary_path:
         return
     lines = [
-        "## Plan de despliegue ajha.info",
+        "## Plan de despliegue ajha.me",
         "",
         f"- Source SHA: `{plan['source_sha']}`",
         f"- Artifact SHA-256: `{plan['artifact_sha256']}`",

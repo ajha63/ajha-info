@@ -1,12 +1,12 @@
-# Playbook de despliegue de ajha.info
+# Playbook de despliegue de ajha.me
 
-Este flujo publica el contenido estatico aprobado en `arn:aws:s3:::ajha.info` y crea invalidaciones en `arn:aws:cloudfront::554982632606:distribution/E2EWY8K28XHSNA`.
+Este flujo publica el contenido estatico aprobado en `arn:aws:s3:::ajha.me` y crea invalidaciones en `arn:aws:cloudfront::554982632606:distribution/E2EWY8K28XHSNA`.
 
 ## Estado verificado antes del primer despliegue
 
 - Repositorio y rama predeterminada: `ajha63/ajha-info`, `main`.
 - Cuenta AWS: `554982632606`.
-- Bucket: `ajha.info`, region `us-east-1`, cifrado SSE-S3 AES256.
+- Bucket: `ajha.me`, region `us-east-1`, cifrado SSE-S3 AES256.
 - CloudFront: distribucion activa `E2EWY8K28XHSNA`, HTTPS forzado, origen S3 mediante OAI `EQVRY0Z9VPLGF`.
 - La politica y ACL observadas no exponen publicamente el bucket. No hay hosting web S3 directo.
 - El bucket no tiene versionado, Public Access Block ni Ownership Controls configurados. Resolver estos controles de infraestructura mediante un cambio separado y aprobado; el pipeline no modifica politicas, ACL, versionado ni CloudFront.
@@ -30,17 +30,17 @@ La politica inicial no incluye `s3:DeleteObject`; el primer despliegue no contie
 
 ## Preparacion y pull request
 
-1. Trabajar en `codex/ajha-info-deployment-pipeline` y revisar que solo contenga el pipeline, scripts, pruebas y este playbook.
+1. Trabajar en `codex/ajha-me-deployment-pipeline` y revisar que solo contenga el pipeline, scripts, pruebas y este playbook.
 2. Ejecutar `npm ci --ignore-scripts`, `python3 -m unittest discover -s tests`, `npm run validate:html` y construir un artefacto en un directorio temporal con `scripts/build_site.py`.
 3. Crear el PR hacia `main`. Revisar los checks y fusionarlo con aprobacion del owner.
 
 ## Ejecucion del primer despliegue
 
-1. Abrir Actions, elegir `Deploy ajha.info` y ejecutar desde `main`.
+1. Abrir Actions, elegir `Deploy ajha.me` y ejecutar desde `main`.
 2. Introducir el SHA completo del commit de `main` que se desea publicar. Usar `[]` para `delete_paths_json` en el primer despliegue: los objetos heredados no tienen la marca de gestion del pipeline y no se eliminaran automaticamente.
 3. Revisar en el resumen del job `plan` el SHA, digest del artefacto, digest del plan, altas/cambios, bajas e invalidaciones.
 4. El owner aprueba el environment `production` solo si esos datos coinciden con el alcance esperado. Un cambio concurrente en S3 modifica el plan y bloquea la ejecucion.
-5. El job carga archivos nuevos o modificados, mantiene headers de cache existentes, publica HTML al final, espera la invalidacion y compara por SHA-256 los objetos servidos por `https://ajha.info`.
+5. El job carga archivos nuevos o modificados, mantiene headers de cache existentes, publica HTML al final, espera la invalidacion y compara por SHA-256 los objetos servidos por `https://ajha.me`.
 
 ## Rollback
 

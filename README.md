@@ -1,12 +1,12 @@
-# ajha.info
+# ajha.me
 
-Repositorio de mi página personal **[ajha.info](https://ajha.info/)**.
+Repositorio de mi página personal **[ajha.me](https://ajha.me/)**.
 
 Este sitio funciona como mi espacio personal en Internet para presentar mi perfil profesional, compartir proyectos y publicar contenido sobre tecnología, operaciones en la nube, soporte TI, automatización e inteligencia artificial aplicada.
 
 ## Sobre el sitio
 
-**ajha.info** está basado en la plantilla **Miniport** de [HTML5 UP](https://html5up.net/) y fue adaptado como una página personal de una sola vista con navegación por secciones.
+**ajha.me** está basado en la plantilla **Miniport** de [HTML5 UP](https://html5up.net/) y fue adaptado como una página personal de una sola vista con navegación por secciones.
 
 El enfoque actual del sitio es **ejecutivo-práctico con base técnica**: explicar temas de TI de forma clara, conectar tecnología con operación real y convertir aprendizajes en contenido útil para líderes, equipos técnicos y profesionales de soporte.
 
@@ -119,4 +119,4 @@ Otros recursos utilizados por la plantilla original:
 
 ## Sitio web
 
-Visita la página en: **[https://ajha.info/](https://ajha.info/)**
+Visita la página en: **[https://ajha.me/](https://ajha.me/)**

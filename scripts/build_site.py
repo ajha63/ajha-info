@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build a deterministic, allowlisted artifact for ajha.info."""
+"""Build a deterministic, allowlisted artifact for ajha.me."""
 
 from __future__ import annotations
 

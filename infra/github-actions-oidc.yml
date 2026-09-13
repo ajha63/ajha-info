@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: "2010-09-09"
-Description: Temporary GitHub Actions roles for ajha.info release planning and deployment
+Description: GitHub Actions OIDC roles for ajha.me release planning and deployment
 
 Resources:
   GitHubOidcProvider:
@@ -10,15 +10,15 @@ Resources:
         - sts.amazonaws.com
       Tags:
         - Key: Project
-          Value: ajha.info
+          Value: ajha.me
         - Key: ManagedBy
           Value: CloudFormation
 
   GitHubReadRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: AjhaInfoGitHubRead
-      Description: Read-only S3 access for the ajha.info deployment plan
+      RoleName: AjhaMeGitHubRead
+      Description: Read-only S3 access for the ajha.me deployment plan
       MaxSessionDuration: 3600
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -32,7 +32,7 @@ Resources:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
                 token.actions.githubusercontent.com:sub: repo:ajha63@560156/ajha-info@1367452827:ref:refs/heads/main
       Policies:
-        - PolicyName: AjhaInfoReleaseRead
+        - PolicyName: AjhaMeReleaseRead
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -41,22 +41,22 @@ Resources:
                 Action:
                   - s3:GetBucketLocation
                   - s3:ListBucket
-                Resource: arn:aws:s3:::ajha.info
+                Resource: arn:aws:s3:::ajha.me
               - Sid: ReadObjects
                 Effect: Allow
                 Action: s3:GetObject
-                Resource: arn:aws:s3:::ajha.info/*
+                Resource: arn:aws:s3:::ajha.me/*
       Tags:
         - Key: Project
-          Value: ajha.info
+          Value: ajha.me
         - Key: ManagedBy
           Value: CloudFormation
 
   GitHubDeployRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: AjhaInfoGitHubDeploy
-      Description: Approved S3 and CloudFront publication for ajha.info
+      RoleName: AjhaMeGitHubDeploy
+      Description: Approved S3 and CloudFront publication for ajha.me
       MaxSessionDuration: 3600
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -70,7 +70,7 @@ Resources:
                 token.actions.githubusercontent.com:aud: sts.amazonaws.com
                 token.actions.githubusercontent.com:sub: repo:ajha63@560156/ajha-info@1367452827:environment:production
       Policies:
-        - PolicyName: AjhaInfoReleaseDeploy
+        - PolicyName: AjhaMeReleaseDeploy
           PolicyDocument:
             Version: "2012-10-17"
             Statement:
@@ -79,13 +79,13 @@ Resources:
                 Action:
                   - s3:GetBucketLocation
                   - s3:ListBucket
-                Resource: arn:aws:s3:::ajha.info
+                Resource: arn:aws:s3:::ajha.me
               - Sid: ReadAndPublishObjects
                 Effect: Allow
                 Action:
                   - s3:GetObject
                   - s3:PutObject
-                Resource: arn:aws:s3:::ajha.info/*
+                Resource: arn:aws:s3:::ajha.me/*
               - Sid: InvalidateDistribution
                 Effect: Allow
                 Action:
@@ -94,7 +94,7 @@ Resources:
                 Resource: arn:aws:cloudfront::554982632606:distribution/E2EWY8K28XHSNA
       Tags:
         - Key: Project
-          Value: ajha.info
+          Value: ajha.me
         - Key: ManagedBy
           Value: CloudFormation
 

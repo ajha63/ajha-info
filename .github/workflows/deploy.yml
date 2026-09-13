@@ -1,4 +1,4 @@
-name: Deploy ajha.info
+name: Deploy ajha.me
 
 on:
   workflow_dispatch:
@@ -16,7 +16,7 @@ on:
 permissions: {}
 
 concurrency:
-  group: ajha-info-production
+  group: ajha-me-production
   cancel-in-progress: false
 
 jobs:
@@ -62,7 +62,7 @@ jobs:
           role-to-assume: ${{ vars.AWS_READ_ROLE_ARN }}
           aws-region: us-east-1
           allowed-account-ids: "554982632606"
-          role-session-name: ajha-info-plan
+          role-session-name: ajha-me-plan
 
       - name: Calculate production plan
         id: plan
@@ -72,7 +72,7 @@ jobs:
         run: |
           python3 scripts/deploy_site.py plan \
             --release-dir "$RELEASE_DIR" \
-            --bucket ajha.info \
+            --bucket ajha.me \
             --delete-paths-json "$DELETE_PATHS_JSON" \
             --output "$RELEASE_DIR/plan.json" \
             --github-output "$GITHUB_OUTPUT" \
@@ -81,7 +81,7 @@ jobs:
       - name: Retain the reviewed artifact and plan
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: ajha-info-release-${{ github.run_id }}
+          name: ajha-me-release-${{ github.run_id }}
           path: ${{ runner.temp }}/ajha-release/
           if-no-files-found: error
           retention-days: 7
@@ -112,7 +112,7 @@ jobs:
       - name: Download reviewed artifact and plan
         uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5.0.0
         with:
-          name: ajha-info-release-${{ github.run_id }}
+          name: ajha-me-release-${{ github.run_id }}
           path: ${{ runner.temp }}/ajha-release
 
       - name: Verify approved digests
@@ -129,7 +129,7 @@ jobs:
           role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
           aws-region: us-east-1
           allowed-account-ids: "554982632606"
-          role-session-name: ajha-info-deploy
+          role-session-name: ajha-me-deploy
 
       - name: Apply unchanged plan and invalidate CloudFront
         env:
@@ -147,4 +147,4 @@ jobs:
           python3 scripts/deploy_site.py verify \
             --release-dir "$RELEASE_DIR" \
             --plan "$RELEASE_DIR/plan.json" \
-            --base-url https://ajha.info
+            --base-url https://ajha.me

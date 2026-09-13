@@ -161,7 +161,7 @@ La recomendacion es iniciar con un piloto de 6 a 8 semanas en operaciones TI, li
 
 ## CTA para el sitio
 
-[Invitacion alineada con ajha.info: conversacion profesional, colaboracion o intercambio de experiencia.]
+[Invitacion alineada con ajha.me: conversacion profesional, colaboracion o intercambio de experiencia.]
 
 Ejemplo:
 Si estas explorando como llevar AI a operaciones TI, cloud o soporte tecnico con una vision ejecutiva, este es el tipo de conversacion que vale la pena empezar: pequena, medible y conectada al negocio.
